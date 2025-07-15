@@ -14,4 +14,4 @@ This is a web-based platform that uses Artificial Intelligence to automatically 
   - Grammar correctness
 - ✅ Dashboard for teachers and students
 - ✅ Automatic scoring and feedback
-- ✅ Built using React, Node.js, and Python
+- ✅ Built using React and Node.js
