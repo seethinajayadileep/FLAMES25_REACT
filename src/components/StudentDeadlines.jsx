@@ -1,94 +1,71 @@
-import React from 'react';
 
-// Utility to get days until due date
+import React, { useState, useEffect } from 'react';
+
+
+
 function getDaysUntilDue(dueDate) {
   const due = new Date(dueDate);
   const today = new Date();
-  const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-  return diff;
+  
+  due.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
 }
 
 function StudentDeadline() {
-  const assignments = [
-    {
-      id: 1,
-      title: "Linear Equations in Two Variables",
-      subject: "mathematics",
-      text: "...",
-      maxMarks: 10,
-      dueDate: "2025-07-15",
-      status: "pending",
-      submittedAnswer: null,
-      score: null,
-      feedback: null,
-    },
-    {
-      id: 2,
-      title: "Photosynthesis Process",
-      subject: "science",
-      text: "...",
-      maxMarks: 15,
-      dueDate: "2025-07-15",
-      status: "pending",
-      submittedAnswer: null,
-      score: null,
-      feedback: null,
-    },
-    {
-      id: 3,
-      title: "Shakespeare's Hamlet Analysis",
-      subject: "english",
-      text: "...",
-      maxMarks: 20,
-      dueDate: "2025-07-15",
-      status: "pending",
-      submittedAnswer: null,
-      score: null,
-      feedback: null,
-    },
-    {
-      id: 4,
-      title: "World War II Impact",
-      subject: "history",
-      text: "...",
-      maxMarks: 18,
-      dueDate: "2024-01-20",
-      status: "submitted",
-      submittedAnswer: "...",
-      score: null,
-      feedback: null,
-    },
-    {
-      id: 5,
-      title: "Quadratic Functions",
-      subject: "mathematics",
-      text: "...",
-      maxMarks: 12,
-      dueDate: "2024-01-15",
-      status: "graded",
-      submittedAnswer: "...",
-      score: 10,
-      feedback: "...",
-    },
-    {
-      id: 6,
-      title: "Cell Division",
-      subject: "science",
-      text: "...",
-      maxMarks: 16,
-      dueDate: "2024-01-12",
-      status: "graded",
-      submittedAnswer: "...",
-      score: 14,
-      feedback: "...",
-    },
-  ];
+  const [assignments, setAssignments] = useState([]); 
+  const [loading, setLoading] = useState(true);     
+  const [error, setError] = useState(null);         
 
-  // Filter top 5 upcoming pending assignments
+  
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        
+        const response = await fetch('http://localhost:5038/assignments');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+        const data = await response.json();
+        setAssignments(data); 
+      } catch (err) {
+        console.error("Failed to fetch assignments for deadlines:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssignments();
+  }, []); 
+
+ 
   const upcomingAssignments = assignments
-    .filter(a => a.status === 'pending')
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-    .slice(0, 5);
+    .filter(a => a.status === 'pending' && new Date(a.dueDate) >= new Date()) 
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)) 
+    .slice(0, 5); 
+
+  if (loading) {
+    return (
+      <div className="student-upcoming-deadlines">
+        <h3>Upcoming Deadlines</h3>
+        <p>Loading upcoming deadlines...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="student-upcoming-deadlines">
+        <h3>Upcoming Deadlines</h3>
+        <p>Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="student-upcoming-deadlines">
@@ -98,11 +75,12 @@ function StudentDeadline() {
           <p>No upcoming pending assignments.</p>
         ) : (
           upcomingAssignments.map(assignment => {
+            
             const daysUntilDue = getDaysUntilDue(assignment.dueDate);
             const isUrgent = daysUntilDue <= 2;
 
             return (
-              <div key={assignment.id} className="student-deadline-item">
+              <div key={assignment._id} className="student-deadline-item">
                 <div className="student-deadline-info">
                   <h5>{assignment.title}</h5>
                   <p>

@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 
-function StudentSideBar({ ButtonClicked }) {
+
+function StudentSideBar({ ButtonClicked, onClose }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // default active tab
 
   const handleClick = (tabName) => {
     setActiveTab(tabName);
     ButtonClicked(tabName);
+   
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (
